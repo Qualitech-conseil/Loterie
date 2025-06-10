@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laisser un avis Google</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 2rem;
+      color: white;
+      text-align: center;
+      min-height: 100vh;
+      position: relative;
+      background: none;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=1950&q=80');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-attachment: fixed;
+      filter: blur(8px);
+      opacity: 0.3;
+      z-index: -1;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    #logo {
+      max-height: 120px;
+      margin-bottom: 1rem;
+    }
+    button, a.button-link {
+      display: inline-block;
+      padding: 1rem 2rem;
+      font-weight: bold;
+      font-size: 1.2rem;
+      cursor: pointer;
+      border-radius: 8px;
+      margin-top: 1.5rem;
+      border: none;
+    }
+    a.button-link {
+      background-color: #1a73e8;
+      color: white;
+      text-decoration: none;
+    }
+    button {
+      background-color: gold;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+
+  <img id="logo" src="logo-client.png" alt="Logo Client" />
+  <h1>Pour jouer et tenter votre chance, vous devez d'abord laisser un avis Google</h1>
+
+  <div id="btnContainer"></div>
+
+  <script>
+    const btnContainer = document.getElementById('btnContainer');
+
+    let avisClick = false;
+
+    function createLeaveReviewButton() {
+      const link = document.createElement('a');
+      link.href = "https://search.google.com/local/writereview?placeid=ChIJj7ASL0pvsBIRzvSwwV6ekTQ&source=g.page.m.ia._&laa=nmx-review-solicitation-ia2"; // Remplace TON_PLACE_ID
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = "Laisser un avis Google";
+      link.className = "button-link";
+      link.addEventListener('click', () => {
+        avisClick = true;
+        renderButtons();
+      });
+      return link;
+    }
+
+    function createConfirmButton() {
+      const btn = document.createElement('button');
+      btn.textContent = "Vous avez laissé un avis et vous voulez tourner la roue";
+      btn.addEventListener('click', () => {
+        window.location.href = 'roue.html'; // adapte ce chemin vers ta page roue
+      });
+      return btn;
+    }
+
+    function renderButtons() {
+      btnContainer.innerHTML = '';
+      if (!avisClick) {
+        btnContainer.appendChild(createLeaveReviewButton());
+      } else {
+        btnContainer.appendChild(createConfirmButton());
+      }
+    }
+
+    renderButtons();
+  </script>
+
+</body>
+</html>
