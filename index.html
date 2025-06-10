@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Roue corrigée avec logo, fond, dents et résultat fiable</title>
+<style>
+  body {
+    margin: 0; padding: 0;
+    font-family: Arial, sans-serif;
+    color: white;
+    min-height: 100vh;
+    background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1950&q=80') center/cover no-repeat fixed;
+    position: relative;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: -1;
+  }
+  #container {
+    max-width: 480px;
+    margin: 20px auto;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+  }
+  #logo {
+    max-height: 130px;
+    margin-bottom: 12px;
+  }
+  h1 {
+    margin: 8px 0 6px 0;
+  }
+  p {
+    margin: 0 0 20px 0;
+  }
+  #wheel-container {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    margin: 0 auto;
+  }
+  canvas#wheel {
+    border-radius: 50%;
+    box-shadow: 0 0 15px black;
+    width: 400px;
+    height: 400px;
+  }
+  #indicator {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    width: 10px;
+    height: 40px;
+    background: silver;
+    border-radius: 5px 5px 0 0;
+    transform-origin: bottom center;
+    transform: translateX(-50%) rotate(180deg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    z-index: 20;
+    transition: transform 0.5s ease-out;
+  }
+  #spinButton {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: gold;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 10px gold;
+    z-index: 25;
+  }
+  #result {
+    margin-top: 25px;
+    font-size: 24px;
+    min-height: 40px;
+  }
+</style>
+</head>
+<body>
+
+<div id="container">
+  <img id="logo" src="logo-client.png" alt="Logo Client" />
+  <h1>Merci pour votre avis Google !</h1>
+  <p>Tentez votre chance !</p>
+
+  <div id="wheel-container">
+    <div id="indicator"></div>
+    <canvas id="wheel" width="400" height="400"></canvas>
+    <button id="spinButton">Tourner</button>
+  </div>
+
+  <div id="result"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+<script>
+  const canvas = document.getElementById('wheel');
+  const ctx = canvas.getContext('2d');
+  const spinButton = document.getElementById('spinButton');
+  const resultDisplay = document.getElementById('result');
+  const indicator = document.getElementById('indicator');
+
+  const segments = ["1 Cheesecake", "Perdu", "1 Smoothie", "Perdu", "1 Cookie", "Perdu"];
+  const colors = ["#F87171", "#60A5FA", "#FBBF24", "#34D399", "#A78BFA", "#F97316"];
+
+  const totalSpinsKey = 'totalSpins';
+  const nextWinSpinKey = 'nextWinSpin';
+
+  function getTotalSpins() {
+    return parseInt(localStorage.getItem(totalSpinsKey)) || 0;
+  }
+
+  function setTotalSpins(value) {
+    localStorage.setItem(totalSpinsKey, value);
+  }
+
+  function getNextWinSpin() {
+    return parseInt(localStorage.getItem(nextWinSpinKey)) || null;
+  }
+
+  function setNextWinSpin(value) {
+    localStorage.setItem(nextWinSpinKey, value);
+  }
+
+  function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  let isSpinning = false;
+  let angle = 0;
+
+  function drawWheel() {
+    const centerX = 200;
+    const centerY = 200;
+    const radius = 200;
+    const arc = (2 * Math.PI) / segments.length;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Dents autour de la roue (bien visibles)
+    const teethCount = 60;
+    const outerRadius = radius + 15;
+    const innerRadius = radius + 7;
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    for (let i = 0; i < teethCount; i++) {
+      const angleTooth = (2 * Math.PI / teethCount) * i;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angleTooth) * outerRadius, Math.sin(angleTooth) * outerRadius);
+      ctx.lineTo(Math.cos(angleTooth) * innerRadius, Math.sin(angleTooth) * innerRadius);
+      ctx.strokeStyle = (i % 2 === 0) ? "#444" : "#666";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Segments
+    for (let i = 0; i < segments.length; i++) {
+      ctx.beginPath();
+      ctx.fillStyle = colors[i];
+      ctx.moveTo(centerX, centerY);
+      ctx.arc(centerX, centerY, radius, i * arc, (i + 1) * arc);
+      ctx.lineTo(centerX, centerY);
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(i * arc + arc / 2);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 18px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(segments[i], radius * 0.65, 0);
+      ctx.restore();
+    }
+  }
+
+  function updateIndicator(angleRad, spinning) {
+    if (spinning) {
+      const oscillation = Math.sin(angleRad * 15) * 15;
+      indicator.style.transition = "none";
+      indicator.style.transform = `translateX(-50%) rotate(${180 + oscillation}deg)`;
+    } else {
+      indicator.style.transition = "transform 0.5s ease-out";
+      indicator.style.transform = `translateX(-50%) rotate(180deg)`;
+    }
+  }
+
+  function spin() {
+    if (isSpinning) return;
+    isSpinning = true;
+    resultDisplay.textContent = '';
+
+    let totalSpins = getTotalSpins() + 1;
+    setTotalSpins(totalSpins);
+
+    let nextWinSpin = getNextWinSpin();
+    if (nextWinSpin === null) {
+      nextWinSpin = totalSpins + randomInt(5, 15);
+      setNextWinSpin(nextWinSpin);
+    }
+
+    const winningIndices = segments
+      .map((seg, idx) => seg !== "Perdu" ? idx : null)
+      .filter(idx => idx !== null);
+    const losingIndices = segments
+      .map((seg, idx) => seg === "Perdu" ? idx : null)
+      .filter(idx => idx !== null);
+
+    let chosenIndex;
+
+    if (totalSpins === nextWinSpin) {
+      chosenIndex = winningIndices[Math.floor(Math.random() * winningIndices.length)];
+      nextWinSpin = totalSpins + randomInt(5, 15);
+      setNextWinSpin(nextWinSpin);
+    } else {
+      chosenIndex = losingIndices[Math.floor(Math.random() * losingIndices.length)];
+    }
+
+    // Log précis pour débugger
+    console.log(`Spin #${totalSpins}: segment #${chosenIndex} - ${segments[chosenIndex]} - next gain à #${nextWinSpin}`);
+
+    const arc = 360 / segments.length;
+    const baseTurns = 10;
+    // On inverse l'angle pour corriger la direction et décalage 90deg
+    // Correction importante pour que l'indice corresponde bien à l'affichage
+    const segmentAngle = 360 - (chosenIndex * arc + arc / 2) - 90;
+    const randomOffset = (Math.random() * 10) - 5;
+    const targetAngle = 360 * baseTurns + segmentAngle + randomOffset;
+
+    let startTime = null;
+    const duration = 5000;
+
+    function animateSpin(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      if (elapsed >= duration) {
+        angle = targetAngle % 360;
+        drawRotatedWheel(angle);
+        updateIndicator(angle * Math.PI / 180, false);
+        finishSpin(chosenIndex);
+        return;
+      }
+      const easing = 1 - Math.pow(1 - elapsed / duration, 4);
+      angle = (targetAngle * easing) % 360;
+      drawRotatedWheel(angle);
+      updateIndicator(angle * Math.PI / 180, true);
+      requestAnimationFrame(animateSpin);
+    }
+
+    requestAnimationFrame(animateSpin);
+  }
+
+  function drawRotatedWheel(angleDegrees) {
+    const radians = angleDegrees * Math.PI / 180;
+    ctx.save();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(radians);
+    ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    drawWheel();
+    ctx.restore();
+  }
+
+  function finishSpin(chosenIndex) {
+    const outcome = segments[chosenIndex];
+    if (outcome !== "Perdu") {
+      confetti({
+        particleCount: 200,
+        spread: 100,
+        origin: { y: 0.6 }
+      });
+      resultDisplay.textContent = `🎉 Vous avez gagné : ${outcome} 🎉`;
+    } else {
+      resultDisplay.textContent = "😢 Perdu...";
+    }
+    isSpinning = false;
+  }
+
+  drawWheel();
+  spinButton.addEventListener("click", spin);
+</script>
+
+</body>
+</html>
