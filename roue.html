@@ -191,18 +191,6 @@
       ctx.arc(centerX, centerY, radius, i * arc, (i + 1) * arc);
       ctx.lineTo(centerX, centerY);
       ctx.fill();
-
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate(i * arc + arc / 2);
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 18px Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(segments[i], radius * 0.65, 0);
-      ctx.restore();
-    }
-  }
 // Position du texte : on calcule les coordonnées polaires
       const midAngle = i * arc + arc / 2;
       const textRadius = radius * 0.65;
