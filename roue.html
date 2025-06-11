@@ -140,6 +140,24 @@
   let isSpinning = false;
   let angle = 0;
 
+ function splitTextTwoLines(ctx, text, maxWidth) {
+    if (ctx.measureText(text).width <= maxWidth) return [text];
+    const words = text.split(' ');
+    let line1 = '';
+    let line2 = '';
+    for(let i=0; i < words.length; i++) {
+      const testLine = line1.length === 0 ? words[i] : line1 + ' ' + words[i];
+      if (ctx.measureText(testLine).width <= maxWidth) {
+        line1 = testLine;
+      } else {
+        line2 = words.slice(i).join(' ');
+        break;
+      }
+    }
+    return [line1, line2];
+  }
+
+  
   function drawWheel() {
     const centerX = 200;
     const centerY = 200;
