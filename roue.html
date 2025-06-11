@@ -203,7 +203,25 @@
       ctx.restore();
     }
   }
+// Position du texte : on calcule les coordonnées polaires
+      const midAngle = i * arc + arc / 2;
+      const textRadius = radius * 0.65;
+      const x = centerX + textRadius * Math.cos(midAngle);
+      const y = centerY + textRadius * Math.sin(midAngle);
 
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 14px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      const lines = splitTextTwoLines(ctx, segments[i], 120);
+      const lineHeight = 18;
+      const startY = y - (lines.length - 1) * lineHeight / 2;
+      for (let j = 0; j < lines.length; j++) {
+        ctx.fillText(lines[j], x, startY + j * lineHeight);
+      }
+    }
+  }
   function updateIndicator(angleRad, spinning) {
     if (spinning) {
       const oscillation = Math.sin(angleRad * 15) * 15;
